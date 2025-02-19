@@ -1,0 +1,167 @@
+---
+description: roadmap à suivre pour réaliser tout les points du projet
+globs: 
+---
+
+# Your rule content
+
+roadmap amélioré : Roadmap Améliorée – Analyse des Tendances du Bitcoin avec IA & Open Data
+Phase 0 : Mise en place de la méthode de gestion de projet et de la veille (E2, E4)
+Définir les rôles et la conduite de projet agile
+
+Mettre en place un backlog (user stories, critères d’acceptation, priorisation).
+Définir les rituels : Daily Stand-up, Sprint Planning, Sprint Review, Retrospective.
+Choisir les outils de pilotage : Trello/Jira (Kanban), Slack ou Teams (communication), Git pour le versionnement, etc.
+Référentiel :
+C16 (coordination agile)
+C14/C15 (analyse du besoin, formalisation specs fonctionnelles)
+Organiser la veille technique & réglementaire
+
+Planifier un temps de veille régulier (ex. 1h/semaine).
+Recenser les sources pour l’IA (blogs IA, sources officielles réglementaires RGPD).
+Créer un document de veille (règlementations récentes en matière de RGPD, normes d’accessibilité).
+Référentiel :
+C6 (veille IA, veille réglementaire)
+Phase 1 : Conception et modélisation (E1, E4)
+Analyse du besoin & rédaction des spécifications fonctionnelles
+
+Rédiger des user stories et leurs critères d’acceptation, y compris objectifs d’accessibilité (WCAG, RG2AA).
+Créer un diagramme de parcours utilisateurs (wireframes, schéma fonctionnel).
+Référentiel :
+C14 (spécifications fonctionnelles, modélisation utilisateurs)
+Modélisation des données
+
+Établir un modèle conceptuel (Merise ou Entité-Relation) pour structurer les données (actualités, prix, prédictions, utilisateurs…).
+Définir un modèle physique (tables SQL, colonnes, types, contraintes).
+Planifier la conformité RGPD (registre de traitement, anonymisation si nécessaire).
+Référentiel :
+C4 (création base de données, RGPD), C14 (analyse besoin), C15 (conception technique)
+Conception de l’architecture technique
+
+Décrire l’architecture :
+Choix framework back-end (Flask ou FastAPI, etc.), front-end (Streamlit ou React), service IA (Prophet, LSTM…).
+Diagramme de flux de données.
+Réaliser une proof of concept (POC) technique en local : tester un micro-service ou la connectivité à l’API CoinGecko.
+Référentiel :
+C15 (architecture, POC), C17 (préparation du dev)
+Phase 2 : Collecte & Gestion des Données (E1)
+Extraction et agrégation multi-sources
+
+Scripts d’extraction (Scraping CoinDesk, API CoinGecko, chargement dataset Big Data) :
+Versionner ces scripts sur Git (C1).
+Intégrer des requêtes SQL si on stocke dans une base relationnelle (ex. SQLite/PostgreSQL), documenter ces requêtes (C2).
+Nettoyage et normalisation (C3) :
+Script clean_data.py pour supprimer valeurs aberrantes et harmoniser formats (dates, devise…).
+Stockage RGPD-compliant (C4) :
+Créer la base (SQL) à partir du modèle physique.
+Définir un registre de traitement et des procédures de tri/anonymisation si données personnelles (C4).
+Mise à disposition initiale des données
+
+API REST (C5) :
+Routes pour récupérer les données brutes ou agrégées (GET /data, GET /historical).
+Authentification (API Key), doc OpenAPI.
+Versionnement du code et documentation technique.
+Phase 3 : Veille approfondie & Benchmark IA (E2)
+Veille technique
+
+Consolider le document de veille : sources IA (OpenAI, Azure AI, Hugging Face, etc.), cadre juridique (propriété intellectuelle, RGPD).
+Rendre les synthèses accessibles (format PDF balisé, par ex.).
+Référentiel :
+C6 (veille technique et réglementaire)
+Benchmark des services IA
+
+Comparer plusieurs solutions (Prophet, LSTM, GPT, solutions SaaS type Azure Cognitive Services).
+Documenter les contraintes techniques, la consommation énergétique (démarche éco-responsable) et la facilité d’intégration.
+Référentiel :
+C7 (identifier et benchmarker services IA)
+C8 (paramétrage du service choisi)
+Installation / Paramétrage IA
+
+Mettre en place localement ou sur le cloud le service IA sélectionné.
+Documenter la configuration, l’authentification, les dépendances (C8).
+Phase 4 : Développement de l’IA & de son API (E3)
+Développer l’API exposant le modèle (C9)
+
+Créer un service (Flask, FastAPI) pour inférer la prédiction du prix du BTC :
+Endpoints : GET /predict (retourne la prévision), POST /train (facultatif, réentraînement).
+Sécuriser l’accès (authentification, tokens, gestion des droits), prendre en compte OWASP Top 10 (C17, C9).
+Générer la doc OpenAPI et la versionner.
+Intégrer l’API IA dans l’application (C10)
+
+Application front (Streamlit/Flask ou autre) qui consomme l’API :
+Appel GET /predict pour afficher la prédiction.
+Gérer le renouvellement de token, l’erreur de connexion (C10).
+Tests IA (C12)
+
+Créer des tests automatisés (Pytest, unittest) pour valider :
+Chargement des données (scénarios de test)
+Entraînement du modèle (résultats attendus)
+Évaluation (métriques MAPE, RMSE, etc.)
+Documenter la procédure d’exécution et la couverture des tests (C12).
+Chaîne de livraison continue IA (MLOps) (C13)
+
+Mettre en place un pipeline CI/CD (GitHub Actions, GitLab CI) qui :
+Exécute les tests des données, l’entraînement, la validation du modèle.
+Produit un artefact (modèle entraîné) déployable.
+Référentiel :
+C13 (livraison continue du modèle IA).
+Phase 5 : Développement de l’Application Web (E4)
+Développement des interfaces (C17)
+
+Respecter les maquettes (wireframes) définies.
+Intégrer l’IA (affichage des prédictions, graphiques).
+Vérifier la compatibilité accessibilité (labels, contrastes, navigation clavier…).
+Sécurité et éco-conception
+
+Implémenter les recommandations OWASP (gestion sessions, XSS, etc.).
+Réduire les requêtes inutiles, optimiser la charge CPU (bonne pratique Green IT).
+Intégration continue de l’application (C18)
+
+Configurer la pipeline CI qui build l’application, exécute les tests unitaires et d’intégration.
+Versionner la configuration (fichier .yml sur GitLab CI ou GitHub Actions).
+Livraison continue (déploiement) (C19)
+
+Ajouter les étapes de packaging (Docker, minification du front, etc.).
+Déploiement automatique sur un environnement de staging ou production après validation des tests.
+Documentation & Collaboration
+
+Documenter l’installation de l’environnement de dev, les dépendances, la procédure de test.
+Mettre à jour régulièrement le backlog, partager les avancements avec l’équipe.
+Phase 6 : Monitoring & Débogage en Production (E5)
+Monitorer l’application et le modèle IA (C20)
+
+Mettre en place Prometheus/Grafana ou équivalent pour :
+Collecter les logs et métriques (ex. latence API, usage CPU).
+Définir des seuils d’alerte et configurer des notifications (email, Slack).
+Vérifier la conformité RGPD dans la journalisation (pas de logs de données sensibles non masquées).
+Gestion des incidents et résolution (C21)
+
+Décrire la procédure de débogage :
+Outil de suivi (issue tracker GitHub/GitLab), reproduction du bug, solution, merge request.
+Mettre à jour la documentation technique à chaque correctif.
+Récapitulatif des Liens Référentiel ↔ Roadmap
+E1 « Gestion des données » :
+Phase 2 (extraction multi-sources, scripts versionnés, agrégation, création DB, RGPD, API de données).
+E2 « Veille service IA » :
+Phase 0 (mise en place veille), Phase 3 (benchmark IA, veille technique), documentation.
+E3 « Mettre à disposition l’IA » :
+Phase 4 (API IA, tests, pipeline MLOps).
+E4 « Développer une app » :
+Phase 0 (méthode agile), Phase 1 (spécifications, modélisation), Phase 5 (développement, CI/CD).
+E5 « Monitoring + Débogage » :
+Phase 6 (Prometheus/Grafana, logs, alertes, procédure de résolution d’incidents).
+Conclusion
+Avec cette roadmap améliorée, on couvre tous les points du référentiel :
+
+On ajoute la méthodologie Agile et la gestion de projet (C14, C16).
+On clarifie l’architecture, la modélisation des données et la conformité RGPD (C4).
+On décrit le Benchmark et le paramétrage de services IA (C7, C8).
+On inclut une chaîne CI/CD pour le modèle IA (MLOps) et l’application (C13, C18, C19).
+On assure un monitoring et un débogage complet (C20, C21).
+Ainsi, chaque bloc (E1 à E5) et chaque compétence (C1 à C21) se retrouve explicitement dans le plan d’action.
+
+
+
+
+- You can @ files here
+- You can use markdown but dont have to
