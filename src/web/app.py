@@ -76,7 +76,14 @@ def get_historical_data(days=90):
         if response.status_code == 200:
             data = pd.DataFrame(response.json())
             data['timestamp'] = pd.to_datetime(data['timestamp'])
+            data = data.sort_values('timestamp', ascending=True)  # Tri chronologique
             st.write(f"Nombre de données reçues: {len(data)}")  # Debug log
+            
+            # Vérification des données manquantes
+            if not data.empty:
+                st.write(f"Première date: {data['timestamp'].min()}")
+                st.write(f"Dernière date: {data['timestamp'].max()}")
+            
             return data
         else:
             st.error(f"Erreur API historique: {response.text}")
@@ -99,7 +106,7 @@ def analyze_with_gemini(data):
         percent_change = ((closing_price / opening_price - 1) * 100)
 
         # Construction du prompt pour Gemini
-        prompt = f"""En tant qu'expert en analyse technique du Bitcoin, analyse les données suivantes des dernières 24 heures :
+        prompt = f"""En tant qu'expert en analyse technique du Bitcoin, analyse les données suivantes des dernières 24 heures de manière concise et claire :
 
 Prix d'ouverture : ${opening_price:,.2f}
 Prix de clôture : ${closing_price:,.2f}
@@ -108,17 +115,22 @@ Plus bas : ${lowest_price:,.2f}
 Variation : {percent_change:,.2f}%
 Volume total : ${volume_total:,.0f}
 
-Fournis une analyse détaillée incluant :
+Fournis une analyse courte et structurée incluant :
 1. La tendance générale (haussière/baissière)
-2. Les points de support et de résistance importants
-3. Une recommandation sur la direction probable du prix
-4. Les risques potentiels à surveiller
+2. Les niveaux de support et résistance
+3. La direction probable du prix
+4. Les points de vigilance
 
-Limite ta réponse à 4-5 phrases concises."""
+Format souhaité :
+- Une phrase par point
+- Pas de caractères spéciaux
+- Texte simple et direct"""
 
         # Appel à l'API Gemini
         response = model.generate_content(prompt)
-        return response.text
+        # Nettoyage de la réponse
+        clean_response = response.text.replace('\n\n', '\n').strip()
+        return clean_response
 
     except Exception as e:
         return f"Erreur lors de l'analyse : {str(e)}"
@@ -141,16 +153,16 @@ def prepare_analysis_data(data):
     analysis = analyze_with_gemini(data)
     
     # Formatage du résumé
-    summary = f"""📊 Résumé technique (24h) :
+    summary = f"""### 📊 Résumé technique (24h)
     
-Prix d'ouverture : ${metrics['open_price']:,.2f}
-Prix le plus haut : ${metrics['high_price']:,.2f}
-Prix le plus bas : ${metrics['low_price']:,.2f}
-Prix de clôture : ${metrics['close_price']:,.2f}
-Variation : {metrics['percent_change']:,.2f}%
-Volume total : ${metrics['volume_total']:,.0f}
+**Prix d'ouverture :** ${metrics['open_price']:,.2f}
+**Prix le plus haut :** ${metrics['high_price']:,.2f}
+**Prix le plus bas :** ${metrics['low_price']:,.2f}
+**Prix de clôture :** ${metrics['close_price']:,.2f}
+**Variation :** {metrics['percent_change']:,.2f}%
+**Volume total :** ${metrics['volume_total']:,.0f}
 
-🤖 Analyse IA :
+### 🤖 Analyse IA
 {analysis}
 """
     return summary
@@ -196,33 +208,69 @@ if not historical_data.empty:
     col1, col2 = st.columns([2, 1])
     with col1:
         # Graphique des dernières 24h
-        last_24h = historical_data.tail(24)
-        fig_24h = go.Figure(data=[go.Candlestick(
-            x=last_24h['timestamp'],
-            open=last_24h['open_price'],
-            high=last_24h['high_price'],
-            low=last_24h['low_price'],
-            close=last_24h['close_price'],
-            name="OHLC"
-        )])
+        current_time = datetime.now()
+        start_time_24h = current_time - timedelta(hours=24)
         
-        fig_24h.update_layout(
-            title="Dernières 24 heures",
-            yaxis_title="Prix (USD)",
-            xaxis_title="Heure",
-            height=400,
-            template="plotly_dark",
-            xaxis_rangeslider_visible=False
-        )
+        # Filtrer les données des dernières 24h
+        last_24h = historical_data[
+            (historical_data['timestamp'] >= start_time_24h.strftime("%Y-%m-%d %H:%M:%S"))
+        ].copy()
         
-        st.plotly_chart(fig_24h, use_container_width=True)
+        if not last_24h.empty:
+            # Afficher les informations de debug
+            st.write(f"Première date disponible: {last_24h['timestamp'].min()}")
+            st.write(f"Dernière date disponible: {last_24h['timestamp'].max()}")
+            
+            # Créer le graphique avec une meilleure configuration
+            fig_24h = go.Figure(data=[go.Candlestick(
+                x=last_24h['timestamp'],
+                open=last_24h['open_price'],
+                high=last_24h['high_price'],
+                low=last_24h['low_price'],
+                close=last_24h['close_price'],
+                name="OHLC"
+            )])
+            
+            # Amélioration du style du graphique
+            fig_24h.update_layout(
+                title="Dernières 24 heures",
+                yaxis_title="Prix (USD)",
+                xaxis_title="Heure",
+                height=500,  # Augmentation de la hauteur
+                template="plotly_dark",
+                xaxis_rangeslider_visible=False,
+                xaxis=dict(
+                    type='date',
+                    tickformat='%H:%M',
+                    dtick=3600000,  # Tick toutes les heures
+                    gridcolor='rgba(128, 128, 128, 0.2)',
+                    showgrid=True
+                ),
+                yaxis=dict(
+                    gridcolor='rgba(128, 128, 128, 0.2)',
+                    showgrid=True
+                ),
+                plot_bgcolor='rgba(0,0,0,0)',
+                paper_bgcolor='rgba(0,0,0,0)',
+                margin=dict(l=50, r=50, t=50, b=50)
+            )
+            
+            st.plotly_chart(fig_24h, use_container_width=True)
+            
+            # Afficher des informations sur les données
+            st.write(f"Nombre de points de données sur 24h: {len(last_24h)}")
+        else:
+            st.warning("Pas assez de données pour les dernières 24 heures")
     
     with col2:
         st.markdown("### 📊 Résumé")
         if st.button("Analyser la tendance"):
             with st.spinner("Analyse en cours avec Gemini..."):
-                analysis = prepare_analysis_data(historical_data)
-                st.markdown(analysis)
+                if not last_24h.empty:
+                    analysis = prepare_analysis_data(last_24h)  # Utiliser les données filtrées
+                    st.markdown(analysis)
+                else:
+                    st.warning("Pas assez de données pour effectuer une analyse")
 else:
     st.error("Aucune donnée disponible")
 
