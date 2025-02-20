@@ -35,10 +35,10 @@ def sample_data():
     
     df = pd.DataFrame({
         'timestamp': dates,
-        'open': price * (1 + np.random.normal(0, 0.001, len(dates))),
-        'high': price * (1 + np.abs(np.random.normal(0, 0.002, len(dates)))),
-        'low': price * (1 - np.abs(np.random.normal(0, 0.002, len(dates)))),
-        'close': price,
+        'open_price': price * (1 + np.random.normal(0, 0.001, len(dates))),
+        'high_price': price * (1 + np.abs(np.random.normal(0, 0.002, len(dates)))),
+        'low_price': price * (1 - np.abs(np.random.normal(0, 0.002, len(dates)))),
+        'close_price': price,
         'volume': np.random.normal(1000000, 100000, len(dates))
     })
     
@@ -86,15 +86,17 @@ def test_model_prediction(sample_data):
         
         # Prédiction
         future_days = 7
-        predictions = model.predict(future_days)
+        predictions = model.predict(sample_data, future_days)
         
         # Vérifications
+        assert 'ds' in predictions.columns, "Colonne ds manquante"
+        assert 'yhat' in predictions.columns, "Colonne yhat manquante"
+        assert 'yhat_lower' in predictions.columns, "Colonne yhat_lower manquante"
+        assert 'yhat_upper' in predictions.columns, "Colonne yhat_upper manquante"
         assert len(predictions) == future_days, "Nombre incorrect de prédictions"
-        assert all(col in predictions.columns for col in ['date', 'predicted_price', 'lower_bound', 'upper_bound']), \
-            "Colonnes manquantes dans les prédictions"
-        assert (predictions['lower_bound'] <= predictions['predicted_price']).all(), \
+        assert (predictions['yhat_lower'] <= predictions['yhat']).all(), \
             "Bornes inférieures invalides"
-        assert (predictions['upper_bound'] >= predictions['predicted_price']).all(), \
+        assert (predictions['yhat_upper'] >= predictions['yhat']).all(), \
             "Bornes supérieures invalides"
         
         print("✅ Test de prédiction réussi")
@@ -113,16 +115,16 @@ def test_model_evaluation(sample_data):
         # Entraînement et prédiction
         model = BitcoinProphetModel()
         model.train(train_data)
-        predictions = model.predict(test_size)
+        predictions = model.predict(train_data, test_size)
         
         # Évaluation
-        y_true = test_data['close'].values
-        y_pred = predictions['predicted_price'].values
+        y_true = np.log1p(test_data['close_price'].values)  # Log transformation comme dans le modèle
+        y_pred = predictions['yhat'].values
         
         # Débogage
-        print("\nValeurs réelles :")
+        print("\nValeurs réelles (log) :")
         print(y_true)
-        print("\nPrédictions :")
+        print("\nPrédictions (log) :")
         print(y_pred)
         print("\nDifférence :")
         print(y_true - y_pred)
@@ -160,7 +162,7 @@ def test_model_save_load(sample_data):
         assert loaded_model.is_trained, "Le modèle chargé n'est pas marqué comme entraîné"
         
         # Test des prédictions avec le modèle chargé
-        predictions = loaded_model.predict(7)
+        predictions = loaded_model.predict(sample_data, 7)
         assert len(predictions) == 7, "Nombre incorrect de prédictions après chargement"
         
         print("✅ Test de sauvegarde/chargement réussi")

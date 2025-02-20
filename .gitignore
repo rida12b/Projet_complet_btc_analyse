@@ -22,6 +22,7 @@ wheels/
 
 # Environnement virtuel
 venv/
+env/
 ENV/
 
 # IDE
@@ -31,33 +32,16 @@ ENV/
 *.swo
 
 # Logs et données
-*.log
 logs/
-data/*.csv
-data/*.json
-*.db
+*.log
+data/*.db
 *.sqlite3
 
-# Secrets
+# Environnement
 .env
-.env.*
-*.key
-secrets/
+.env.local
+.env.*.local
 
-# Tests
-.coverage
-htmlcov/
-.pytest_cache/
-
-# Documentation générée
-docs/_build/
-
-# Modèles et checkpoints
-*.h5
-*.pkl
-*.model
-models/checkpoints/
-
-# Système
+# Autres
 .DS_Store
 Thumbs.db 

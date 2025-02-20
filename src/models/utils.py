@@ -31,14 +31,14 @@ def prepare_data(df: pd.DataFrame) -> pd.DataFrame:
         # Ajout RSI
         if 'RSI' in TECHNICAL_INDICATORS:
             df['RSI'] = ta.momentum.RSIIndicator(
-                close=df['close'], 
+                close=df['close_price'], 
                 window=TECHNICAL_INDICATORS['RSI']['period']
             ).rsi()
             
         # Ajout MACD
         if 'MACD' in TECHNICAL_INDICATORS:
             macd = ta.trend.MACD(
-                close=df['close'],
+                close=df['close_price'],
                 window_fast=TECHNICAL_INDICATORS['MACD']['fast_period'],
                 window_slow=TECHNICAL_INDICATORS['MACD']['slow_period'],
                 window_sign=TECHNICAL_INDICATORS['MACD']['signal_period']
@@ -50,7 +50,7 @@ def prepare_data(df: pd.DataFrame) -> pd.DataFrame:
         # Ajout Bollinger Bands
         if 'BB' in TECHNICAL_INDICATORS:
             bb = ta.volatility.BollingerBands(
-                close=df['close'],
+                close=df['close_price'],
                 window=TECHNICAL_INDICATORS['BB']['period'],
                 window_dev=TECHNICAL_INDICATORS['BB']['std_dev']
             )
@@ -62,7 +62,7 @@ def prepare_data(df: pd.DataFrame) -> pd.DataFrame:
         if 'EMA' in TECHNICAL_INDICATORS:
             for period in TECHNICAL_INDICATORS['EMA']['periods']:
                 df[f'EMA_{period}'] = ta.trend.EMAIndicator(
-                    close=df['close'],
+                    close=df['close_price'],
                     window=period
                 ).ema_indicator()
         

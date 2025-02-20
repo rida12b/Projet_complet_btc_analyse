@@ -65,27 +65,27 @@ class BitcoinProphetModel:
         df = df.sort_values('ds')
         
         # Normalisation du prix (log transformation)
-        df['y'] = np.log1p(df['close'])
+        df['y'] = np.log1p(df['close_price'])
         
         # Calcul des indicateurs techniques
-        df['ema_5'] = df['close'].ewm(span=5, adjust=False).mean()
-        df['ema_8'] = df['close'].ewm(span=8, adjust=False).mean()
-        df['ema_13'] = df['close'].ewm(span=13, adjust=False).mean()
-        df['ema_21'] = df['close'].ewm(span=21, adjust=False).mean()
+        df['ema_5'] = df['close_price'].ewm(span=5, adjust=False).mean()
+        df['ema_8'] = df['close_price'].ewm(span=8, adjust=False).mean()
+        df['ema_13'] = df['close_price'].ewm(span=13, adjust=False).mean()
+        df['ema_21'] = df['close_price'].ewm(span=21, adjust=False).mean()
         
         # Normalisation des EMAs
         for col in ['ema_5', 'ema_8', 'ema_13', 'ema_21']:
             df[col] = np.log1p(df[col])
         
         # Calcul du momentum et des tendances
-        df['momentum'] = df['close'].pct_change()
-        df['trend_1d'] = df['close'].diff()
-        df['trend_3d'] = df['close'].diff(3)
-        df['trend_5d'] = df['close'].diff(5)
+        df['momentum'] = df['close_price'].pct_change()
+        df['trend_1d'] = df['close_price'].diff()
+        df['trend_3d'] = df['close_price'].diff(3)
+        df['trend_5d'] = df['close_price'].diff(5)
         
         # Normalisation des tendances
         for col in ['trend_1d', 'trend_3d', 'trend_5d']:
-            df[col] = df[col] / df['close'].shift(1)
+            df[col] = df[col] / df['close_price'].shift(1)
             
         # Normalisation du volume
         df['volume_norm'] = np.log1p(df['volume'])
@@ -114,41 +114,43 @@ class BitcoinProphetModel:
         # Sauvegarder automatiquement le modèle
         self.save()
     
-    def predict(self, days: int) -> pd.DataFrame:
-        """Fait des prédictions pour un nombre donné de jours."""
-        if self.model is None or not self.is_trained:
-            raise ValueError("Le modèle doit être entraîné avant de faire des prédictions.")
+    def predict(self, data: pd.DataFrame, horizon: int) -> pd.DataFrame:
+        """
+        Fait des prédictions pour un nombre donné de jours.
+        
+        Args:
+            data: DataFrame avec les données historiques
+            horizon: Nombre de jours à prédire
             
+        Returns:
+            DataFrame avec les prédictions
+        """
+        if not self.is_trained:
+            self.train(data)
+        
+        # Préparer les données
+        prepared_data = self.prepare_data(data)
+        
         # Création des dates futures
-        last_date = self.last_data['ds'].max()
-        future_dates = pd.date_range(start=last_date, periods=days + 1)[1:]
+        last_date = prepared_data['ds'].max()
+        future_dates = pd.date_range(start=last_date, periods=horizon + 1)[1:]
         future = pd.DataFrame({'ds': future_dates})
         
-        # Ajout des régresseurs pour les dates futures
-        # EMAs : utiliser les dernières valeurs connues
+        # Calcul des indicateurs techniques pour les dates futures
+        # On utilise les dernières valeurs connues pour les régresseurs
         for col in ['ema_5', 'ema_8', 'ema_13', 'ema_21']:
-            future[col] = self.last_data[col].iloc[-1]
+            future[col] = prepared_data[col].iloc[-1]
             
-        # Momentum et tendances : utiliser les dernières valeurs
-        future['momentum'] = self.last_data['momentum'].iloc[-1]
-        future['trend_1d'] = self.last_data['trend_1d'].iloc[-1]
-        future['trend_3d'] = self.last_data['trend_3d'].iloc[-1]
-        future['trend_5d'] = self.last_data['trend_5d'].iloc[-1]
+        future['momentum'] = prepared_data['momentum'].iloc[-1]
+        future['trend_1d'] = prepared_data['trend_1d'].iloc[-1]
+        future['trend_3d'] = prepared_data['trend_3d'].iloc[-1]
+        future['trend_5d'] = prepared_data['trend_5d'].iloc[-1]
+        future['volume_norm'] = prepared_data['volume_norm'].mean()
         
-        # Volume : utiliser la moyenne du volume
-        future['volume_norm'] = self.last_data['volume_norm'].mean()
-        
-        # Prédiction
+        # Faire la prédiction
         forecast = self.model.predict(future)
         
-        # Conversion des prédictions en prix réels
-        predictions = pd.DataFrame()
-        predictions['date'] = forecast['ds']
-        predictions['predicted_price'] = np.expm1(forecast['yhat'])
-        predictions['lower_bound'] = np.expm1(forecast['yhat_lower'])
-        predictions['upper_bound'] = np.expm1(forecast['yhat_upper'])
-        
-        return predictions
+        return forecast
     
     def save(self, model_path: str = None):
         """

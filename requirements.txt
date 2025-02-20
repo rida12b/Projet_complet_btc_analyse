@@ -1,44 +1,37 @@
-# API et Web
-fastapi>=0.100.0
-uvicorn>=0.23.0
-httpx>=0.24.0  # Pour les tests
-python-multipart>=0.0.6
-pydantic>=2.0.0
-streamlit>=1.24.0
-python-dotenv>=1.0.0
-
-# Data Processing
+# Dépendances de base
 numpy>=1.24.0
-pandas>=2.0.0
-requests>=2.31.0
-python-binance>=1.0.19
+pandas==2.2.0
+scikit-learn>=1.2.0
+python-binance>=1.0.0
 
-# Machine Learning
-scikit-learn>=1.3.0
-prophet>=1.1.4
-ta>=0.10.2  # Pour les indicateurs techniques
+# API et Web
+fastapi==0.109.2
+uvicorn==0.27.1
+streamlit==1.31.0
+plotly==5.18.0
+requests==2.31.0
 
-# Testing
+# Tests
 pytest>=7.4.0
 pytest-cov>=4.1.0
-pytest-asyncio>=0.21.0
 
 # Monitoring
 prometheus-client>=0.17.0
 
 # Documentation
-sphinx>=7.2.0
+sphinx>=7.0.0
 
-# Base de données
-SQLAlchemy>=2.0.0
+# Machine Learning
+prophet>=1.1.0
+cmdstanpy>=1.1.0
 
 # Utilitaires
-python-jose[cryptography]>=3.3.0
-passlib[bcrypt]>=1.7.4
-aiofiles>=23.1.0
-plotly>=5.18.0  # Pour la visualisation
+python-dotenv==1.0.1
+pydantic>=2.0.0
 
 # Additional dependencies
 python-jose[cryptography]>=3.3.0
 passlib[bcrypt]>=1.7.4
-aiofiles>=23.1.0 
+aiofiles>=23.1.0
+google-generativeai==0.3.2
+sqlalchemy==2.0.25 

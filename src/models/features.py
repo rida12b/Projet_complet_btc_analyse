@@ -22,14 +22,14 @@ def calculate_technical_indicators(df: pd.DataFrame) -> pd.DataFrame:
     # RSI
     if 'RSI' in TECHNICAL_INDICATORS:
         df['rsi'] = ta.momentum.RSIIndicator(
-            close=df['close'],
+            close=df['close_price'],
             window=TECHNICAL_INDICATORS['RSI']['period']
         ).rsi()
     
     # MACD
     if 'MACD' in TECHNICAL_INDICATORS:
         macd = ta.trend.MACD(
-            close=df['close'],
+            close=df['close_price'],
             window_fast=TECHNICAL_INDICATORS['MACD']['fast_period'],
             window_slow=TECHNICAL_INDICATORS['MACD']['slow_period'],
             window_sign=TECHNICAL_INDICATORS['MACD']['signal_period']
@@ -41,7 +41,7 @@ def calculate_technical_indicators(df: pd.DataFrame) -> pd.DataFrame:
     # Bollinger Bands
     if 'BB' in TECHNICAL_INDICATORS:
         bollinger = ta.volatility.BollingerBands(
-            close=df['close'],
+            close=df['close_price'],
             window=TECHNICAL_INDICATORS['BB']['period'],
             window_dev=TECHNICAL_INDICATORS['BB']['std_dev']
         )
@@ -53,19 +53,19 @@ def calculate_technical_indicators(df: pd.DataFrame) -> pd.DataFrame:
     if 'EMA' in TECHNICAL_INDICATORS:
         for period in TECHNICAL_INDICATORS['EMA']['periods']:
             df[f'ema_{period}'] = ta.trend.EMAIndicator(
-                close=df['close'],
+                close=df['close_price'],
                 window=period
             ).ema_indicator()
     
     # Volatilité
-    df['volatility'] = df['close'].pct_change().rolling(window=30).std()
+    df['volatility'] = df['close_price'].pct_change().rolling(window=30).std()
     
     # Volume moyen
     df['volume_sma'] = df['volume'].rolling(window=20).mean()
     
     # Retours sur différentes périodes
     for period in [1, 7, 14, 30]:
-        df[f'return_{period}d'] = df['close'].pct_change(periods=period)
+        df[f'return_{period}d'] = df['close_price'].pct_change(periods=period)
     
     # Gestion des valeurs NaN
     # Pour les indicateurs techniques, on remplace par la moyenne
@@ -97,11 +97,11 @@ def prepare_prophet_data(df: pd.DataFrame) -> pd.DataFrame:
     """
     prophet_df = pd.DataFrame()
     prophet_df['ds'] = pd.to_datetime(df['timestamp'])
-    prophet_df['y'] = df['close']
+    prophet_df['y'] = df['close_price']
     
     # Ajout des régresseurs (indicateurs techniques)
     for col in df.columns:
-        if col not in ['timestamp', 'close']:
+        if col not in ['timestamp', 'close_price']:
             prophet_df[col] = df[col]
     
     return prophet_df 
